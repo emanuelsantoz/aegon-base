@@ -1,0 +1,35 @@
+<div class="app-shell">
+  @if (menuOpen()) { <button class="backdrop" type="button" aria-label="Fechar menu" (click)="menuOpen.set(false)"></button> }
+  <aside class="sidebar" [class.open]="menuOpen()" aria-label="Navegação principal">
+    <div class="brand"><img src="assets/aegon-logo.svg" alt="Aegon"><span>GESTÃO FINANCEIRA</span></div>
+    <div class="workspace"><span class="workspace-mark">A</span><span><strong>Minha empresa</strong><small>Ambiente de demonstração</small></span><span class="chevron">⌄</span></div>
+    <nav>
+      <p class="nav-label">INÍCIO</p><span class="nav-item muted"><span class="nav-icon">⌂</span>Visão geral <small>Em breve</small></span>
+      <p class="nav-label">ORÇAMENTO E PLANEJAMENTO</p>
+      <span class="nav-item muted"><span class="nav-icon">▤</span>Orçamento</span>
+      <span class="nav-item muted"><span class="nav-icon">＋</span>Registrar despesa</span>
+      <span class="nav-item muted"><span class="nav-icon">≡</span>Lançamentos</span>
+      <span class="nav-item muted"><span class="nav-icon">▦</span>Planejamento</span>
+      <p class="nav-label">DECISÕES</p>
+      <span class="nav-item muted"><span class="nav-icon">◉</span>Aprovações</span>
+      <div class="nav-item active" aria-current="page"><span class="nav-icon">◇</span>Pendências e exceções</div>
+      <p class="nav-label">ANÁLISE</p><span class="nav-item muted"><span class="nav-icon">▥</span>Relatórios</span>
+    </nav>
+    <div class="sidebar-bottom"><span class="avatar">DE</span><span><strong>Perfil de demonstração</strong><small>Dados apenas nesta sessão</small></span></div>
+  </aside>
+  <div class="main-column">
+    <header class="topbar"><button class="menu-button" type="button" aria-label="Abrir menu" (click)="menuOpen.set(true)">☰</button><div class="top-title">Gestão financeira <span>/</span> Decisões</div><div class="top-actions"><span class="demo-chip"><span></span> Demonstração</span><span class="exercise">Exercício <strong>2027</strong></span><span class="top-avatar">DE</span></div></header>
+    <main>
+      <div class="breadcrumbs">Decisões <span>›</span> <strong>Pendências e exceções</strong></div>
+      <div class="page-heading"><div><p class="eyebrow">GESTÃO POR EXCEÇÃO</p><h1>Pendências e exceções</h1><p class="intro">Acompanhe o que precisa de atenção e registre decisões fora da regra prevista.</p></div><button class="button primary" type="button" (click)="openModal()"><span>＋</span> Registrar exceção</button></div>
+      <div class="demo-notice"><span class="info-icon">i</span><p><strong>Você está em uma demonstração.</strong> Os registros são simulados e desaparecem ao recarregar a página.</p></div>
+      <section class="summary-grid" aria-label="Resumo das pendências"><article class="summary"><div class="summary-top"><span class="summary-icon blue">◇</span><span class="subtle">ACOMPANHAMENTO</span></div><strong>{{ activeCount() }}</strong><p>Pendências ativas</p><small>Itens que precisam de atenção</small></article><article class="summary"><div class="summary-top"><span class="summary-icon green">✓</span><span class="subtle">HISTÓRICO</span></div><strong>{{ exceptions().length - activeCount() }}</strong><p>Resolvidas</p><small>Registros concluídos nesta sessão</small></article><article class="summary info-card"><div class="summary-top"><span class="summary-icon pale">i</span></div><p>Entenda a diferença</p><small><b>Pendência</b> precisa de correção. <b>Exceção</b> exige justificativa ou decisão.</small></article></section>
+      <section class="panel" aria-labelledby="panel-title"><div class="panel-header"><div><h2 id="panel-title">Acompanhar registros</h2><p>Consulte os itens e mantenha as decisões organizadas.</p></div><label class="filter"><span>Exibir</span><select [ngModel]="filter()" (ngModelChange)="setFilter($event)"><option value="ativas">Pendências ativas</option><option value="resolvidas">Histórico resolvido</option><option value="todas">Todos os registros</option></select></label></div>
+        @if (visible().length === 0) { <div class="empty"><div class="empty-icon">✓</div><h3>Nenhum registro por aqui</h3><p>@if (filter() === 'ativas') { Você está em dia. Quando houver algo para acompanhar, aparecerá aqui. } @else { Não há registros para o filtro selecionado. }</p><button class="button secondary" type="button" (click)="openModal()">Registrar exceção</button></div> }
+        @else { <div class="records">@for (item of visible(); track item.id) { <article class="record"><div class="record-icon">!</div><div class="record-content"><div class="record-heading"><h3>{{ item.title }}</h3><span class="badge" [class.done]="item.status === 'resolvida'">{{ item.status === 'ativa' ? 'Ativa' : 'Resolvida' }}</span></div><p>{{ item.description }}</p><small>Registro de demonstração</small></div>@if (item.status === 'ativa') { <button class="button secondary compact" type="button" (click)="resolve(item.id)">Marcar como resolvida</button> }</article> }</div> }
+      </section>
+      <footer>Gestão financeira <span>·</span> Ambiente de demonstração</footer>
+    </main>
+  </div>
+</div>
+@if (modal()) { <div class="modal-overlay" (click)="modal.set(false)"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" (click)="$event.stopPropagation()"><div class="modal-head"><div><p class="eyebrow">NOVO REGISTRO</p><h2 id="modal-title">Registrar exceção</h2></div><button class="close" type="button" aria-label="Fechar" (click)="modal.set(false)">×</button></div><p class="modal-description">Descreva a situação e a justificativa para facilitar o acompanhamento.</p><div class="mini-notice">Registro de demonstração: os dados não serão salvos.</div><form (ngSubmit)="save()"><label for="title">Título da exceção <span>*</span></label><input id="title" name="title" [(ngModel)]="title" maxlength="120" placeholder="Ex.: Despesa fora do planejamento" [attr.aria-invalid]="submitted && !title.trim()"><label for="description">Justificativa <span>*</span></label><textarea id="description" name="description" [(ngModel)]="description" rows="4" placeholder="Descreva a situação e por que ela é necessária." [attr.aria-invalid]="submitted && !description.trim()"></textarea>@if (submitted && (!title.trim() || !description.trim())) { <p class="error" role="alert">Preencha o título e a justificativa para continuar.</p> }<div class="modal-actions"><button class="button secondary" type="button" (click)="modal.set(false)">Cancelar</button><button class="button primary" type="submit">Registrar exceção</button></div></form></section></div> }
